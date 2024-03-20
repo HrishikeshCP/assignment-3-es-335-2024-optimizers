@@ -74,6 +74,8 @@ stoi = {i:s for s,i in itos.items()}
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = NextChar(block_size, len(stoi), emb_dim, 100).to(device)
 model.load_state_dict(torch.load("qn1/model_weights.pth",map_location=device))
+block_size = st.selectbox('Context size',[5,10,15])
+emb_dim = st.selectbox('Embedding size',[2,5,8,12,15])
 input_text = st.text_input("Enter your input text:")
 k = st.slider("Number of characters to predict:", min_value=1, max_value=20, value=5)
 if st.button("Predict"):
