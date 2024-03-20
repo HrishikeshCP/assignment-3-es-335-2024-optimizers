@@ -1,6 +1,6 @@
 import streamlit as st
 import torch
-from q1fns import generate_text,NextChar
+from q1fns import generate_text,NextChar,visualize_embeddings_with_tsne
 
 
 # Streamlit UI
@@ -68,22 +68,25 @@ itos={0: '\n',
  59: 'x',
  60: 'y',
  61: 'z'}
-block_size=10
-emb_dim=15
+# block_size=15
+# emb_dim=15
 stoi = {i:s for s,i in itos.items()}
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = NextChar(block_size, len(stoi), emb_dim, 100).to(device)
 
 block_size = st.selectbox('Context size',[5,10,15])
 emb_dim = st.selectbox('Embedding size',[2,5,8,12,15])
 
+model = NextChar(block_size, len(stoi), emb_dim, 200).to(device)
 input_text = st.text_input("Enter your input text:")
 weightpath=f"qn1/weights/model_weights_b{block_size}_em{emb_dim}.pth"
 model.load_state_dict(torch.load(weightpath,map_location=device))
-k = st.slider("Number of characters to predict:", min_value=1, max_value=20, value=5)
+plot_placeholder = st.empty()
+k = st.slider("Number of characters to predict:", min_value=1, max_value=10000, value=5)
 if st.button("Predict"):
-    if input_text:
-        predicted_text = generate_text( model, itos, stoi, block_size,input_text, k)
-        st.write("Predicted Text:", input_text+predicted_text)
-    else:
-        st.warning("Please enter some input text.")
+    predicted_text = generate_text( model, itos, stoi, block_size,input_text, k)
+    st.write("Predicted Text:\n")
+    st.write(input_text+predicted_text)
+    fig=visualize_embeddings_with_tsne(model.emb,stoi,itos)
+    st.pyplot(fig)
+
+    # st.text_area("Summarized Text", predicted_text,height=None)
