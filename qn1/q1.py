@@ -20,9 +20,10 @@ import requests
 import time
 import os
 
-# To create streamlit application
-!pip install streamlit
-import streamlit as st
+##################################################################
+block_size = 10# context length: how many characters do we take to predict the next one?
+emb_dim = 15
+#################################################################
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -32,14 +33,16 @@ device
 
 url = "https://cs.stanford.edu/people/karpathy/char-rnn/shakespear.txt"
 file_path = "shakespeare.txt"
-
-response = requests.get(url)
-if response.status_code == 200:
-    with open(file_path, "wb") as file:
-        file.write(response.content)
-    print("File downloaded successfully.")
+if os.path.exists(file_path):
+    print("File already exists.")
 else:
-    print("Failed to download the file.")
+    response = requests.get(url)
+    if response.status_code == 200:
+        with open(file_path, "wb") as file:
+            file.write(response.content)
+        print("File downloaded successfully.")
+    else:
+        print("Failed to download the file.")
 
 with open("shakespeare.txt", "r") as file:
     content = file.read()
@@ -51,7 +54,7 @@ stoi = {s:i for i,s in enumerate(chars)}
 itos = {i:s for s,i in stoi.items()}
 pprint(itos)
 
-block_size = 10 # context length: how many characters do we take to predict the next one?
+#  block_size = 10# context length: how many characters do we take to predict the next one
 X, Y = [], []
 
 
@@ -71,7 +74,7 @@ Y = torch.tensor(Y).to(device)
 
 X.shape, X.dtype, Y.shape, Y.dtype
 
-emb_dim = 15
+# emb_dim = 15
 emb = torch.nn.Embedding(len(stoi), emb_dim)
 emb.weight
 emb.weight.shape
@@ -111,7 +114,7 @@ class NextChar(nn.Module):
 # Generate Text from untrained model
 
 
-model = NextChar(block_size, len(stoi), emb_dim, 100).to(device)
+model = NextChar(block_size, len(stoi), emb_dim, 512).to(device)
 # model = torch.compile(model)
 
 g = torch.Generator()
@@ -140,7 +143,7 @@ def generate_text(model, itos, stoi, block_size,iptxt="",max_len=10):
 print(generate_text(model, itos, stoi, block_size))
 
 # Check if the model weights file exists
-weights_file = "model_weights.pth"
+weights_file = f"model_weights_b{block_size}_em{emb_dim}.pth"
 if os.path.exists(weights_file):
     # Load the saved model weights
     model.load_state_dict(torch.load(weights_file))
@@ -170,11 +173,11 @@ else:
             print(epoch, loss.item())
 
     # Save the model weights
-    torch.save(model.state_dict(), "model_weights.pth")
+    torch.save(model.state_dict(), f"model_weights_b{block_size}_em{emb_dim}.pth")
     print("Model weights saved successfully.")
 
 # Load the saved model weights
-model.load_state_dict(torch.load("model_weights.pth"))
+model.load_state_dict(torch.load(f"model_weights_b{block_size}_em{emb_dim}.pth"))
 
 # Visualize the embedding
 
@@ -183,22 +186,3 @@ model.load_state_dict(torch.load("model_weights.pth"))
 #generate text
 inp='BRUTUS'
 print(generate_text(model, itos, stoi,block_size,inp,1000+len(inp)))
-
-# Streamlit UI
-st.title("Next Character Predictor")
-st.write('''#### assajask
-Hiiii
-
-''')
-embedding_values = st.sidebar.selectbox('Embedding Size',
-                        ['2', '8', '10'],
-                        help='sdjfsjdf')
-input_text = st.text_input("Enter your input text:")
-k = st.slider("Number of characters to predict:", min_value=1, max_value=100, value=5)
-
-if st.button("Predict"):
-    if input_text:
-        predicted_text = generate_text(input_text, model, itos, stoi, block_size, k)
-        st.write("Predicted Text:", predicted_text)
-    else:
-        st.warning("Please enter some input text.")
