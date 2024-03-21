@@ -58,18 +58,55 @@ def generate_text(model, itos, stoi, block_size,iptxt="",max_len=10):
 
 # print(generate_text(model, itos, stoi, block_size))
 
-def visualize_embeddings_with_tsne(emb, stoi, itos, title='t-SNE Visualization of Embeddings', figsize=(10, 8), legend_loc='upper left'):
-    """
-    Visualizes embeddings with t-SNE.
+# def visualize_embeddings_with_tsne(emb, stoi, itos, title='t-SNE Visualization of Embeddings', figsize=(10, 8), legend_loc='upper left'):
+#     """
+#     Visualizes embeddings with t-SNE.
     
+#     Args:
+#     - emb (torch.nn.Embedding): The embedding layer.
+#     - stoi (dict): Dictionary mapping characters to indices.
+#     - itos (dict): Dictionary mapping indices to characters.
+#     - title (str): Title of the plot (default: 't-SNE Visualization of Embeddings').
+#     - figsize (tuple): Figure size (default: (10, 8)).
+#     - legend_loc (str): Location of the legend (default: 'upper left').
+    
+#     Returns:
+#     - None
+#     """
+#     # Get the embeddings from the embedding layer
+#     embeddings = emb.weight.data.numpy()
+
+#     # Initialize t-SNE with desired parameters
+#     tsne = TSNE(n_components=2, random_state=42)
+
+#     # Fit t-SNE to the embeddings
+#     embeddings_tsne = tsne.fit_transform(embeddings)
+
+#     # Define a color map for distinct colors
+#     colors = plt.cm.tab20(np.linspace(0, 1, len(itos)))
+
+#     # Visualize the t-SNE embeddings
+#     plt.figure(figsize=figsize)
+#     for i in range(len(embeddings)):
+#         plt.scatter(embeddings_tsne[i, 0], embeddings_tsne[i, 1], label=itos[i], color=colors[i], marker='.')
+#     plt.title(title)
+#     plt.xlabel('t-SNE Dimension 1')
+#     plt.ylabel('t-SNE Dimension 2')
+#     plt.legend(title='Characters', bbox_to_anchor=(1.05, 1), loc='upper left')
+#     # plt.show()
+#     return plt
+
+def visualize_embeddings_with_tsne(emb, stoi, itos, title='t-SNE Visualization of Embeddings', figsize=(10, 8)):
+    """
+    Visualizes embeddings with t-SNE and displays legend in a separate figure.
+
     Args:
     - emb (torch.nn.Embedding): The embedding layer.
     - stoi (dict): Dictionary mapping characters to indices.
     - itos (dict): Dictionary mapping indices to characters.
     - title (str): Title of the plot (default: 't-SNE Visualization of Embeddings').
     - figsize (tuple): Figure size (default: (10, 8)).
-    - legend_loc (str): Location of the legend (default: 'upper left').
-    
+
     Returns:
     - None
     """
@@ -86,12 +123,17 @@ def visualize_embeddings_with_tsne(emb, stoi, itos, title='t-SNE Visualization o
     colors = plt.cm.tab20(np.linspace(0, 1, len(itos)))
 
     # Visualize the t-SNE embeddings
-    plt.figure(figsize=figsize)
+    fig=plt.figure(figsize=figsize)
     for i in range(len(embeddings)):
         plt.scatter(embeddings_tsne[i, 0], embeddings_tsne[i, 1], label=itos[i], color=colors[i], marker='.')
     plt.title(title)
     plt.xlabel('t-SNE Dimension 1')
     plt.ylabel('t-SNE Dimension 2')
     plt.legend(title='Characters', bbox_to_anchor=(1.05, 1), loc='upper left')
-    # plt.show()
-    return plt
+
+    # Create a separate figure for the legend
+    fig_legend = plt.figure()
+    fig_legend.legend(handles=[plt.Line2D([0], [0], marker='.', color='w', markerfacecolor=color, markersize=10, label=label) for label, color in zip(itos.values(), colors)], 
+                      title='Characters', bbox_to_anchor=(1.05, 1), loc='upper left')
+    
+    return fig, fig_legend

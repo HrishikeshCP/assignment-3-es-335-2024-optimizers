@@ -86,7 +86,7 @@ if st.button("Predict"):
     predicted_text = generate_text( model, itos, stoi, block_size,input_text, k)
     st.write("Predicted Text:\n")
     st.write(input_text+predicted_text)
-    fig=visualize_embeddings_with_tsne(model.emb,stoi,itos)
+    fig,fig_legend=visualize_embeddings_with_tsne(model.emb,stoi,itos)
     st.pyplot(fig)
 
     # st.text_area("Summarized Text", predicted_text,height=None)
